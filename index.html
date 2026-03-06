@@ -82,6 +82,7 @@
     .scenario-view { border: 1px solid var(--line); border-radius: 12px; padding: .8rem; background: #f7fbf9; min-height: 100px; }
     .feed-grid { display: grid; gap: .5rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     label.feed-item { display: block; border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: .6rem; cursor: pointer; }
+    label.feed-item:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
     label.feed-item input { margin-right: .4rem; }
     .toekomst { display: grid; gap: .8rem; }
     #brandingReveal { border-left: 4px solid var(--accent); background: #edfaf4; }
@@ -110,7 +111,7 @@
     <section id="ervaring" class="layout-2">
       <article class="card">
         <p class="subtitle">Publieke ervaring, geen foldersite</p>
-        <h1>Alphen leeft nog.<br>De vraag is: voor wie?</h1>
+        <h1>Alphen Leeft Nog.<br>De vraag is: voor wie?</h1>
         <p class="muted">Dit is geen klassieke stemwijzer. Dit is een lokale simulator van keuzes, schade en verantwoordelijkheid. Van Gnephoek tot waterrobuuste straten en van autoluw wonen tot digitale autonomie.</p>
         <p><strong>Niet nóg slimmer. Eerst leefbaarder.</strong></p>
         <div class="button-row">
@@ -144,10 +145,10 @@
         <article class="module" id="wonenModule">
           <h3>Wonen: 5.500 woningen, wat offer je op?</h3>
           <p class="small muted">Schuif op de variabelen en zie de morele balans verschuiven.</p>
-          <div class="small">Betaalbaarheid <output id="wonenBetaalbaarheidValue">60</output></div><input id="wonenBetaalbaarheid" class="slider" type="range" min="0" max="100" value="60">
-          <div class="small">Groen & bomen <output id="wonenGroenValue">55</output></div><input id="wonenGroen" class="slider" type="range" min="0" max="100" value="55">
-          <div class="small">Waterbuffering <output id="wonenWaterValue">50</output></div><input id="wonenWater" class="slider" type="range" min="0" max="100" value="50">
-          <div class="small">Autoluw & stilte <output id="wonenAutoluwValue">50</output></div><input id="wonenAutoluw" class="slider" type="range" min="0" max="100" value="50">
+          <label class="small" for="wonenBetaalbaarheid">Betaalbaarheid <output id="wonenBetaalbaarheidValue" for="wonenBetaalbaarheid">60</output></label><input id="wonenBetaalbaarheid" class="slider" type="range" min="0" max="100" value="60" aria-valuemin="0" aria-valuemax="100" aria-valuenow="60">
+          <label class="small" for="wonenGroen">Groen & bomen <output id="wonenGroenValue" for="wonenGroen">55</output></label><input id="wonenGroen" class="slider" type="range" min="0" max="100" value="55" aria-valuemin="0" aria-valuemax="100" aria-valuenow="55">
+          <label class="small" for="wonenWater">Waterbuffering <output id="wonenWaterValue" for="wonenWater">50</output></label><input id="wonenWater" class="slider" type="range" min="0" max="100" value="50" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+          <label class="small" for="wonenAutoluw">Autoluw & stilte <output id="wonenAutoluwValue" for="wonenAutoluw">50</output></label><input id="wonenAutoluw" class="slider" type="range" min="0" max="100" value="50" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
           <p id="wonenInsight" class="small"></p>
         </article>
         <article class="module" id="waterModule">
@@ -192,6 +193,7 @@
         <button type="button" id="generateManifest">Genereer mini-manifest</button>
         <button type="button" id="savePatch">Red jouw stukje Alphen</button>
       </div>
+      <div id="actionFeedback" class="small muted"></div>
       <article class="module" id="manifestOutput"><h3>Mini-manifest</h3><p class="small muted">Klik op “Genereer mini-manifest” om jouw versie te maken.</p></article>
     </section>
 
@@ -314,6 +316,8 @@
     setLayer("Wonen");
 
     const wonenIds = ["wonenBetaalbaarheid", "wonenGroen", "wonenWater", "wonenAutoluw"];
+    const wonenSliders = Object.fromEntries(wonenIds.map((id) => [id, document.getElementById(id)]));
+    const ecologySliderIds = ["wonenGroen", "wonenWater", "wonenAutoluw"];
     const wonenOutputs = {
       wonenBetaalbaarheid: document.getElementById("wonenBetaalbaarheidValue"),
       wonenGroen: document.getElementById("wonenGroenValue"),
@@ -323,9 +327,11 @@
     const wonenInsight = document.getElementById("wonenInsight");
 
     function updateWonen() {
-      const values = Object.fromEntries(wonenIds.map((id) => [id, Number(document.getElementById(id).value)]));
-      wonenIds.forEach((id) => { wonenOutputs[id].value = values[id]; });
-      const ecologie = (values.wonenGroen + values.wonenWater + values.wonenAutoluw) / 3;
+      const values = Object.fromEntries(wonenIds.map((id) => [id, Number(wonenSliders[id].value)]));
+      wonenIds.forEach((id) => { wonenOutputs[id].textContent = String(values[id]); });
+      wonenIds.forEach((id) => { wonenSliders[id].setAttribute("aria-valuenow", String(values[id])); });
+      const ecologieTotaal = ecologySliderIds.reduce((total, id) => total + values[id], 0);
+      const ecologie = ecologieTotaal / ecologySliderIds.length;
       const sociaal = values.wonenBetaalbaarheid;
       const verschil = sociaal - ecologie;
       let tekst = "Sterke balans: betaalbaarheid en leefomgeving bewegen samen.";
@@ -334,7 +340,7 @@
       wonenInsight.textContent = tekst;
       registerInteraction();
     }
-    wonenIds.forEach((id) => document.getElementById(id).addEventListener("input", updateWonen));
+    wonenIds.forEach((id) => wonenSliders[id].addEventListener("input", updateWonen));
     updateWonen();
 
     const gebiedtypes = ["Stenig centrum", "Polderrand", "Dorpskern", "Verkeersas", "Nieuwbouwwijk"];
@@ -352,7 +358,13 @@
 
     function renderWaterOutput() {
       const details = scenarioData[huidigScenario];
-      waterOutput.innerHTML = `<strong>${huidigGebied} — ${huidigScenario}</strong><br>Risico: ${details.risico}.<br>Aanpak: ${details.advies}.`;
+      const title = document.createElement("strong");
+      title.textContent = `${huidigGebied} — ${huidigScenario}`;
+      const risico = document.createElement("div");
+      risico.textContent = `Risico: ${details.risico}.`;
+      const aanpak = document.createElement("div");
+      aanpak.textContent = `Aanpak: ${details.advies}.`;
+      waterOutput.replaceChildren(title, risico, aanpak);
       registerInteraction();
     }
 
@@ -461,6 +473,7 @@
         { label: "Fiets/OV-prioriteit en veilige leefstraten", score: { mens: 8, dier: 7, natuur: 7, vrijheid: 7 } }
       ]}
     ];
+    const brandingRevealThreshold = rounds.length * 2;
 
     const totals = { mens: 0, dier: 0, natuur: 0, vrijheid: 0 };
     let roundIndex = 0;
@@ -471,18 +484,29 @@
     const scoreLine = document.getElementById("scoreLine");
     const scoreDetails = document.getElementById("scoreDetails");
     const manifestOutput = document.getElementById("manifestOutput");
+    const actionFeedback = document.getElementById("actionFeedback");
+
+    function maxScoreForAxis(axis, completedRounds) {
+      return rounds
+        .slice(0, completedRounds)
+        .reduce((sum, round) => sum + Math.max(...round.options.map((option) => option.score[axis])), 0);
+    }
 
     function updateBars() {
-      const max = Math.max(1, roundIndex * 10);
-      document.getElementById("barMens").style.width = `${Math.min(100, (totals.mens / max) * 100)}%`;
-      document.getElementById("barDier").style.width = `${Math.min(100, (totals.dier / max) * 100)}%`;
-      document.getElementById("barNatuur").style.width = `${Math.min(100, (totals.natuur / max) * 100)}%`;
-      document.getElementById("barVrijheid").style.width = `${Math.min(100, (totals.vrijheid / max) * 100)}%`;
+      const completedRounds = Math.max(1, roundIndex);
+      const maxMens = maxScoreForAxis("mens", completedRounds);
+      const maxDier = maxScoreForAxis("dier", completedRounds);
+      const maxNatuur = maxScoreForAxis("natuur", completedRounds);
+      const maxVrijheid = maxScoreForAxis("vrijheid", completedRounds);
+      document.getElementById("barMens").style.width = `${Math.min(100, (totals.mens / maxMens) * 100)}%`;
+      document.getElementById("barDier").style.width = `${Math.min(100, (totals.dier / maxDier) * 100)}%`;
+      document.getElementById("barNatuur").style.width = `${Math.min(100, (totals.natuur / maxNatuur) * 100)}%`;
+      document.getElementById("barVrijheid").style.width = `${Math.min(100, (totals.vrijheid / maxVrijheid) * 100)}%`;
     }
 
     function registerInteraction() {
       interactionCount += 1;
-      if (interactionCount >= 8) document.getElementById("brandingReveal").hidden = false;
+      if (interactionCount >= brandingRevealThreshold) document.getElementById("brandingReveal").hidden = false;
     }
 
     function finalizeToekomstkiezer() {
@@ -499,7 +523,21 @@
       else if (avg.vrijheid < 5) headline = "Jouw Alphen-score: praktisch, maar kwetsbaar voor platformmacht.";
 
       scoreLine.textContent = headline;
-      scoreDetails.innerHTML = `Meters gemiddeld: Mens ${avg.mens.toFixed(1)} · Dier ${avg.dier.toFixed(1)} · Natuur/Water ${avg.natuur.toFixed(1)} · Vrijheid/Waarden ${avg.vrijheid.toFixed(1)}.<br><strong>Drie ultralokale acties:</strong><ol><li>Kies één straat of wijk en meld waar groen/water direct versterkt kan worden.</li><li>Vraag bij elk nieuw project om een toets op dierenroutes, schaduw en publieke ruimte.</li><li>Eis bij digitale inkoop transparantie, dataminimalisatie en publieke controle.</li></ol>`;
+      const summary = document.createElement("span");
+      summary.textContent = `Meters gemiddeld: Mens ${avg.mens.toFixed(1)}, Dier ${avg.dier.toFixed(1)}, Natuur/Water ${avg.natuur.toFixed(1)}, Vrijheid/Waarden ${avg.vrijheid.toFixed(1)}.`;
+      const actionsTitle = document.createElement("strong");
+      actionsTitle.textContent = "Drie ultralokale acties:";
+      const list = document.createElement("ol");
+      [
+        "Kies één straat of wijk en meld waar groen/water direct versterkt kan worden.",
+        "Vraag bij elk nieuw project om een toets op dierenroutes, schaduw en publieke ruimte.",
+        "Eis bij digitale inkoop transparantie, dataminimalisatie en publieke controle."
+      ].forEach((line) => {
+        const item = document.createElement("li");
+        item.textContent = line;
+        list.appendChild(item);
+      });
+      scoreDetails.replaceChildren(summary, document.createElement("br"), actionsTitle, list);
       roundText.textContent = "Toekomstkiezer afgerond";
       roundQuestion.textContent = "Dank! Je hebt gezien dat politiek gaat over het managen van onderlinge schade.";
       roundChoices.innerHTML = "";
@@ -543,19 +581,38 @@
     });
 
     document.getElementById("shareResult").addEventListener("click", () => {
-      scoreDetails.insertAdjacentHTML("beforeend", `<p class="small"><strong>Deeltekst:</strong> ${scoreLine.textContent} #AlphenLeeftNog</p>`);
+      const strong = document.createElement("strong");
+      strong.textContent = "Deeltekst:";
+      actionFeedback.replaceChildren(strong, document.createTextNode(` ${scoreLine.textContent} #AlphenLeeftNog`));
       registerInteraction();
     });
     document.getElementById("localAction").addEventListener("click", () => {
-      scoreDetails.insertAdjacentHTML("beforeend", "<p class='small'><strong>Actie gestart:</strong> kies een plek met hittestress of verkeersdruk en meld dit als leefbaarheidsissue.</p>");
+      const strong = document.createElement("strong");
+      strong.textContent = "Actie gestart:";
+      actionFeedback.replaceChildren(strong, document.createTextNode(" kies een plek met hittestress of verkeersdruk en meld dit als leefbaarheidsissue."));
       registerInteraction();
     });
     document.getElementById("savePatch").addEventListener("click", () => {
-      scoreDetails.insertAdjacentHTML("beforeend", "<p class='small'><strong>Red jouw stukje Alphen:</strong> bundel één buurtvraag, één natuurdoel en één vrijheidsdoel in je wijkactie.</p>");
+      const strong = document.createElement("strong");
+      strong.textContent = "Red jouw stukje Alphen:";
+      actionFeedback.replaceChildren(strong, document.createTextNode(" bundel één buurtvraag, één natuurdoel en één vrijheidsdoel in je wijkactie."));
       registerInteraction();
     });
     document.getElementById("generateManifest").addEventListener("click", () => {
-      manifestOutput.innerHTML = "<h3>Mini-manifest</h3><ol class='small'><li>Wij kiezen voor woningbouw zonder ecologische zelfverminking.</li><li>Wij kiezen voor leefbaarheid als norm: lucht, geluid, veiligheid en ruimte voor natuur.</li><li>Wij kiezen voor digitale autonomie: publieke waarden boven platformmacht.</li></ol>";
+      const heading = document.createElement("h3");
+      heading.textContent = "Mini-manifest";
+      const list = document.createElement("ol");
+      list.className = "small";
+      [
+        "Wij kiezen voor woningbouw zonder ecologische zelfverminking.",
+        "Wij kiezen voor leefbaarheid als norm: lucht, geluid, veiligheid en ruimte voor natuur.",
+        "Wij kiezen voor digitale autonomie: publieke waarden boven platformmacht."
+      ].forEach((line) => {
+        const item = document.createElement("li");
+        item.textContent = line;
+        list.appendChild(item);
+      });
+      manifestOutput.replaceChildren(heading, list);
       registerInteraction();
     });
   </script>
