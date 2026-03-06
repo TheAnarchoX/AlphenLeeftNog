@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alphen Leeft Nog — interactieve campagne-ervaring</title>
+  <style>
+    :root {
+      --bg: #f4f8f2;
+      --surface: #ffffff;
+      --ink: #102016;
+      --muted: #4d665b;
+      --accent: #1f7d5f;
+      --accent-soft: #ddf2ea;
+      --line: #d3e4da;
+      --shadow: 0 10px 30px rgba(18, 45, 34, 0.08);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 90% 0%, #dff5ec 0%, transparent 50%),
+        radial-gradient(circle at 10% 10%, #eef8f4 0%, transparent 40%),
+        var(--bg);
+      line-height: 1.45;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(7px);
+      background: rgba(244, 248, 242, 0.85);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: .7rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    .nav strong { letter-spacing: .02em; color: var(--accent); }
+    .nav-links { display: flex; flex-wrap: wrap; gap: .45rem; }
+    main { max-width: 1140px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+    section { margin-bottom: 1rem; }
+    h1,h2,h3,p { margin-top: 0; }
+    h1 { font-size: clamp(2rem, 3.5vw, 3.6rem); line-height: 1.1; margin-bottom: .7rem; }
+    h2 { font-size: clamp(1.4rem, 2.2vw, 2rem); }
+    .subtitle { color: var(--accent); font-weight: 650; margin-bottom: .25rem; }
+    .layout-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 1.1rem; box-shadow: var(--shadow); }
+    .muted { color: var(--muted); }
+    .hero-map {
+      min-height: 250px;
+      border-radius: 14px;
+      border: 1px dashed #c4d9cf;
+      background:
+        linear-gradient(120deg, rgba(80, 171, 119, .16), rgba(70, 147, 196, .08)),
+        repeating-linear-gradient(45deg, rgba(255,255,255,.72), rgba(255,255,255,.72) 22px, rgba(203,229,216,.55) 22px, rgba(203,229,216,.55) 44px);
+      display: grid;
+      gap: .5rem;
+      align-content: start;
+      padding: 1rem;
+    }
+    .pills,.button-row,.axis-grid,.actions,.prompt-grid { display: flex; flex-wrap: wrap; gap: .5rem; }
+    button,.pill { border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--ink); font: inherit; padding: .5rem .8rem; cursor: pointer; }
+    button:hover,button[aria-pressed="true"],.pill.active { background: var(--accent-soft); border-color: var(--accent); color: #0d4a36; }
+    .stats { display: grid; gap: .6rem; }
+    .stat { background: #f0f7f3; border-radius: 12px; padding: .65rem; font-size: .95rem; }
+    .layers-grid,.module-grid { display: grid; gap: 1rem; grid-template-columns: 1fr 1fr; }
+    .module { border: 1px solid var(--line); border-radius: 14px; padding: .9rem; background: #fafdfb; }
+    .slider { width: 100%; accent-color: var(--accent); }
+    .small { font-size: .92rem; }
+    .meter-block { margin-bottom: .55rem; }
+    .meter-track { background: #e2ece7; height: 10px; border-radius: 999px; overflow: hidden; }
+    .meter-track > span { display: block; height: 100%; width: 50%; transition: width .25s ease; background: linear-gradient(90deg, #6db99a, var(--accent)); }
+    .scenario-view { border: 1px solid var(--line); border-radius: 12px; padding: .8rem; background: #f7fbf9; min-height: 100px; }
+    .feed-grid { display: grid; gap: .5rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    label.feed-item { display: block; border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: .6rem; cursor: pointer; }
+    label.feed-item:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+    label.feed-item input { margin-right: .4rem; }
+    .toekomst { display: grid; gap: .8rem; }
+    #brandingReveal { border-left: 4px solid var(--accent); background: #edfaf4; }
+    .result-highlight { font-size: 1.1rem; font-weight: 650; color: #114534; }
+    .prompt { background: #f7fcf9; border: 1px solid var(--line); border-radius: 12px; padding: .7rem; flex: 1 1 250px; }
+    @media (max-width: 920px) {
+      .layout-2,.layers-grid,.module-grid { grid-template-columns: 1fr; }
+      .feed-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <strong>Alphen Leeft Nog</strong>
+      <nav class="nav-links" aria-label="Secties">
+        <button type="button" data-jump="#ervaring">Ervaring</button>
+        <button type="button" data-jump="#leefbaarheidslaag">Leefbaarheidslaag</button>
+        <button type="button" data-jump="#toekomstkiezer">Toekomstkiezer</button>
+        <button type="button" data-jump="#resultaat">Jouw uitslag</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section id="ervaring" class="layout-2">
+      <article class="card">
+        <p class="subtitle">Publieke ervaring, geen foldersite</p>
+        <h1>Alphen Leeft Nog.<br>De vraag is: voor wie?</h1>
+        <p class="muted">Dit is geen klassieke stemwijzer. Dit is een lokale simulator van keuzes, schade en verantwoordelijkheid. Van Gnephoek tot waterrobuuste straten en van autoluw wonen tot digitale autonomie.</p>
+        <p><strong>Niet nóg slimmer. Eerst leefbaarder.</strong></p>
+        <div class="button-row">
+          <button type="button" data-jump="#leefbaarheidslaag">Start met de Leefbaarheidslaag</button>
+          <button type="button" data-jump="#toekomstkiezer">Ga direct naar Toekomstkiezer</button>
+        </div>
+        <div class="hero-map" aria-label="Levende kaart van Alphen als conceptuele visual">
+          <strong>Levende kaart van Alphen aan den Rijn</strong>
+          <p class="small muted">Stad, dorpen, polder, water, infra, natuurzones en bouwvelden als één moreel speelveld.</p>
+          <div class="pills">
+            <span class="pill active">Wonen</span><span class="pill">Natuur</span><span class="pill">Water</span><span class="pill">Mobiliteit</span><span class="pill">Digitale vrijheid</span>
+          </div>
+        </div>
+      </article>
+      <aside class="card stats">
+        <div class="stat"><strong>As 1 — Wonen zonder zelfverminking</strong><br>Woningbouw mét betaalbaarheid, koelte, biodiversiteit en publieke voorzieningen.</div>
+        <div class="stat"><strong>As 2 — Leefbaarheid > doorstroming</strong><br>Verkeer framen op lucht, geluid, veiligheid, ruimtebeslag en keuzevrijheid.</div>
+        <div class="stat"><strong>As 3 — Vrije burgers</strong><br>Geen digitale afhankelijkheid van systemen die publieke waarden ondermijnen.</div>
+      </aside>
+    </section>
+
+    <section id="leefbaarheidslaag" class="card">
+      <h2>Leefbaarheidslaag: waar schuurt het in Alphen?</h2>
+      <p class="muted small">Selecteer een laag. Elke laag toont een andere gemeentelijke röntgenfoto over hetzelfde gebied.</p>
+      <div class="pills" id="layerButtons"></div>
+      <div class="layers-grid">
+        <article class="module"><h3 id="layerName">Wonen</h3><p id="layerDescription" class="small muted"></p><ul id="layerSignals" class="small"></ul></article>
+        <article class="module"><h3>Mogelijke keuzes</h3><div id="layerChoices" class="pills"></div></article>
+      </div>
+      <div class="module-grid">
+        <article class="module" id="wonenModule">
+          <h3>Wonen: 5.500 woningen, wat offer je op?</h3>
+          <p class="small muted">Schuif op de variabelen en zie de morele balans verschuiven.</p>
+          <label class="small" for="wonenBetaalbaarheid">Betaalbaarheid <output id="wonenBetaalbaarheidValue" for="wonenBetaalbaarheid">60</output></label><input id="wonenBetaalbaarheid" class="slider" type="range" min="0" max="100" value="60" aria-valuemin="0" aria-valuemax="100" aria-valuenow="60">
+          <label class="small" for="wonenGroen">Groen & bomen <output id="wonenGroenValue" for="wonenGroen">55</output></label><input id="wonenGroen" class="slider" type="range" min="0" max="100" value="55" aria-valuemin="0" aria-valuemax="100" aria-valuenow="55">
+          <label class="small" for="wonenWater">Waterbuffering <output id="wonenWaterValue" for="wonenWater">50</output></label><input id="wonenWater" class="slider" type="range" min="0" max="100" value="50" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+          <label class="small" for="wonenAutoluw">Autoluw & stilte <output id="wonenAutoluwValue" for="wonenAutoluw">50</output></label><input id="wonenAutoluw" class="slider" type="range" min="0" max="100" value="50" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+          <p id="wonenInsight" class="small"></p>
+        </article>
+        <article class="module" id="waterModule">
+          <h3>Water: klimaatspel op wijktype</h3>
+          <p class="small muted">Kies gebiedstype en scenario. Bekijk effect op hittestress, waterdruk en biodiversiteit.</p>
+          <div class="pills" id="gebiedTypeButtons"></div><div class="pills" id="waterScenarioButtons"></div><div class="scenario-view small" id="waterOutput"></div>
+        </article>
+        <article class="module" id="digitaleModule">
+          <h3>Digitale vrijheid: Wie voedt jouw feed?</h3>
+          <p class="small muted">Vink je digitale dag aan. Je ziet hoeveel extractie van aandacht, data en energie ontstaat.</p>
+          <div class="feed-grid" id="feedItems"></div><p id="feedSummary" class="small"></p><div class="axis-grid" id="feedAxes"></div>
+        </article>
+        <article class="module" id="focusModule">
+          <h3>Lokale focus 2026–2030</h3>
+          <ul class="small"><li>Woningbouw ja — maar waterrobuust, biodivers en sociaal.</li><li>Leefbaarheid meten op lucht, geluid en veilige publieke ruimte.</li><li>Gemeentelijke digitale infrastructuur toetsen op autonomie, privacy en publieke controle.</li></ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="toekomstkiezer" class="card toekomst">
+      <h2>Toekomstkiezer: Alphen in 2030</h2>
+      <p id="roundText" class="small muted"></p>
+      <h3 id="roundQuestion"></h3>
+      <div id="roundChoices" class="button-row"></div>
+      <div class="meter-block"><div class="small">Mens</div><div class="meter-track"><span id="barMens"></span></div></div>
+      <div class="meter-block"><div class="small">Dier</div><div class="meter-track"><span id="barDier"></span></div></div>
+      <div class="meter-block"><div class="small">Natuur / Water</div><div class="meter-track"><span id="barNatuur"></span></div></div>
+      <div class="meter-block"><div class="small">Vrijheid / Waarden</div><div class="meter-track"><span id="barVrijheid"></span></div></div>
+      <article id="brandingReveal" class="card" hidden>
+        <h3>Waarom dit bij Partij voor de Dieren past</h3>
+        <p class="small">Je hebt nu de publieke ervaring doorlopen. Hier wordt de politieke keuze expliciet: stem geven aan mens, dier, natuur, water en toekomstige generaties in één lijn.</p>
+      </article>
+    </section>
+
+    <section id="resultaat" class="card">
+      <h2>Jouw Alphen-score</h2>
+      <p id="scoreLine" class="result-highlight">Maak eerst keuzes in de Toekomstkiezer.</p>
+      <p id="scoreDetails" class="small muted">Na afronding ontvang je een deelbare uitkomst, drie ultralokale acties en een mini-manifest.</p>
+      <div class="actions">
+        <button type="button" id="shareResult">Deel persoonlijke resultaattekst</button>
+        <button type="button" id="localAction">Meld lokaal punt</button>
+        <button type="button" id="generateManifest">Genereer mini-manifest</button>
+        <button type="button" id="savePatch">Red jouw stukje Alphen</button>
+      </div>
+      <div id="actionFeedback" class="small muted"></div>
+      <article class="module" id="manifestOutput"><h3>Mini-manifest</h3><p class="small muted">Klik op “Genereer mini-manifest” om jouw versie te maken.</p></article>
+    </section>
+
+    <section class="card">
+      <h2>Sociale campagneprompts</h2>
+      <div class="prompt-grid">
+        <article class="prompt">“Hoeveel Alphen wil jij opofferen voor nóg meer asfalt?”</article>
+        <article class="prompt">“Een betaalbare woning én koelte, bomen en water? Ja, dat is politiek.”</article>
+        <article class="prompt">“Jouw feed is niet neutraal. Jouw gemeente ook niet.”</article>
+        <article class="prompt">“Geen dierenvriendelijke gemeente zonder digitale en ecologische onafhankelijkheid.”</article>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const layerData = {
+      "Wonen": {
+        description: "Bouwen is geen excuus voor ecologische armoede. De kernvraag: hoe bouw je zonder leefbaarheid op te eten?",
+        signals: [
+          "5.500 woningen vraagt tegelijk om betaalbaarheid en robuuste openbare ruimte.",
+          "Groen en water zijn functioneel: verkoeling, infiltratie, biodiversiteit.",
+          "Autoluwe keuzes maken ruimte vrij voor mens en dier."
+        ],
+        choices: ["Sociale huur", "Waterbuffering", "Bomen", "Autoluw", "Publieke voorzieningen"]
+      },
+      "Natuur": {
+        description: "Natuur is geen decoratieve rand, maar een systeemvoorwaarde voor gezondheid en klimaatbestendigheid.",
+        signals: [
+          "Biodiversiteit moet in elk ruimtelijk besluit terugkomen.",
+          "Ecologische verbindingen voorkomen eilandnatuur.",
+          "Stiltegebieden beschermen mens én dier."
+        ],
+        choices: ["Ecologische zones", "Faunaverbinding", "Natuurvriendelijke oevers", "Stiltebescherming"]
+      },
+      "Water": {
+        description: "Dezelfde wijk reageert anders bij hoosbuien, hitte of droogte. Ontwerp bepaalt de schade.",
+        signals: [
+          "Waterberging en infiltratie beperken piekdruk op riool en straten.",
+          "Schaduw en vergroening verminderen hittestress.",
+          "Waterkwaliteit bepaalt gezondheid van mens en ecosysteem."
+        ],
+        choices: ["Minder verstening", "Schaduw", "Wadi's", "Natuurvriendelijke oevers"]
+      },
+      "Mobiliteit": {
+        description: "Leefbaarheid betekent meer dan file-oplossen: lucht, geluid, veiligheid en ruimtegebruik tellen ook.",
+        signals: [
+          "Korte verplaatsingen horen veilig per fiets of te voet te kunnen.",
+          "OV en hubs maken autoluwe woonwijken haalbaar.",
+          "Schone lucht vraagt gedrags- én infrastructuurkeuzes."
+        ],
+        choices: ["Fietsprioriteit", "OV-koppeling", "Autoluwe hubs", "Schone lucht"]
+      },
+      "Digitale vrijheid": {
+        description: "Publieke waarden horen leidend te zijn in digitale infrastructuur, niet advertentiemodellen.",
+        signals: [
+          "Afhankelijkheid van dominante platformen is een democratisch risico.",
+          "Privacyvriendelijke alternatieven zijn ook lokale politieke keuzes.",
+          "Digitale autonomie koppelt vrijheid, duurzaamheid en controle."
+        ],
+        choices: ["Publieke cloud", "Dataminimalisatie", "Open standaarden", "Transparante algoritmes"]
+      },
+      "Eerlijke economie": {
+        description: "Economische groei zonder randvoorwaarden externaliseert schade naar natuur, dieren en inwoners.",
+        signals: [
+          "Lokale ketens vergroten veerkracht.",
+          "Schone productie vermindert lucht- en bodemdruk.",
+          "Eerlijke economie stelt gezondheid boven korte-termijnwinst."
+        ],
+        choices: ["Lokale ketens", "Lage uitstoot", "Circulaire bouw", "Gezonde bodem"]
+      },
+      "Dieren in de gemeente": {
+        description: "Dieren zijn mede-bewoners. Beleidskeuzes moeten hun leefroutes en rust waarborgen.",
+        signals: [
+          "Faunapassages voorkomen versnippering.",
+          "Nest- en rustplekken horen in ruimtelijke plannen.",
+          "Diervriendelijke oevers versterken biodiversiteit."
+        ],
+        choices: ["Faunapassages", "Nestplekken", "Rustzones", "Diervriendelijke oevers"]
+      }
+    };
+
+    const layerButtons = document.getElementById("layerButtons");
+    const layerName = document.getElementById("layerName");
+    const layerDescription = document.getElementById("layerDescription");
+    const layerSignals = document.getElementById("layerSignals");
+    const layerChoices = document.getElementById("layerChoices");
+    let interactionCount = 0;
+
+    function setLayer(layer) {
+      document.querySelectorAll("#layerButtons button").forEach((btn) => {
+        btn.setAttribute("aria-pressed", String(btn.dataset.layer === layer));
+      });
+      const data = layerData[layer];
+      layerName.textContent = layer;
+      layerDescription.textContent = data.description;
+      layerSignals.innerHTML = "";
+      data.signals.forEach((signal) => {
+        const li = document.createElement("li");
+        li.textContent = signal;
+        layerSignals.appendChild(li);
+      });
+      layerChoices.innerHTML = "";
+      data.choices.forEach((choice) => {
+        const chip = document.createElement("span");
+        chip.className = "pill";
+        chip.textContent = choice;
+        layerChoices.appendChild(chip);
+      });
+      registerInteraction();
+    }
+
+    Object.keys(layerData).forEach((layer) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.layer = layer;
+      button.textContent = layer;
+      button.addEventListener("click", () => setLayer(layer));
+      layerButtons.appendChild(button);
+    });
+    setLayer("Wonen");
+
+    const wonenIds = ["wonenBetaalbaarheid", "wonenGroen", "wonenWater", "wonenAutoluw"];
+    const wonenSliders = Object.fromEntries(wonenIds.map((id) => [id, document.getElementById(id)]));
+    const ecologySliderIds = ["wonenGroen", "wonenWater", "wonenAutoluw"];
+    const wonenOutputs = {
+      wonenBetaalbaarheid: document.getElementById("wonenBetaalbaarheidValue"),
+      wonenGroen: document.getElementById("wonenGroenValue"),
+      wonenWater: document.getElementById("wonenWaterValue"),
+      wonenAutoluw: document.getElementById("wonenAutoluwValue")
+    };
+    const wonenInsight = document.getElementById("wonenInsight");
+
+    function updateWonen() {
+      const values = Object.fromEntries(wonenIds.map((id) => [id, Number(wonenSliders[id].value)]));
+      wonenIds.forEach((id) => { wonenOutputs[id].textContent = String(values[id]); });
+      wonenIds.forEach((id) => { wonenSliders[id].setAttribute("aria-valuenow", String(values[id])); });
+      const ecologieTotaal = ecologySliderIds.reduce((total, id) => total + values[id], 0);
+      const ecologie = ecologieTotaal / ecologySliderIds.length;
+      const sociaal = values.wonenBetaalbaarheid;
+      const verschil = sociaal - ecologie;
+      let tekst = "Sterke balans: betaalbaarheid en leefomgeving bewegen samen.";
+      if (verschil > 18) tekst = "Je wint op korte termijn woningen, maar verliest koelte, rust en natuurkwaliteit.";
+      else if (verschil < -18) tekst = "Je maximaliseert leefomgeving, maar moet extra sturen op betaalbare toegang.";
+      wonenInsight.textContent = tekst;
+      registerInteraction();
+    }
+    wonenIds.forEach((id) => wonenSliders[id].addEventListener("input", updateWonen));
+    updateWonen();
+
+    const gebiedtypes = ["Stenig centrum", "Polderrand", "Dorpskern", "Verkeersas", "Nieuwbouwwijk"];
+    const scenarioData = {
+      "Hoosbui": { risico: "hoge piekbelasting", advies: "meer infiltratie, minder verharding, waterberging op straatniveau" },
+      "Hittegolf": { risico: "hittestress en droogte", advies: "schaduw, bomenlinten, koele verblijfsplekken" },
+      "Droge zomer": { risico: "dalende waterkwaliteit", advies: "natuurvriendelijke oevers en slim waterbeheer" },
+      "Slechte waterkwaliteit": { risico: "ecologische achteruitgang", advies: "minder lozing en meer natuurlijke buffering" }
+    };
+    let huidigGebied = gebiedtypes[0];
+    let huidigScenario = "Hoosbui";
+    const gebiedTypeButtons = document.getElementById("gebiedTypeButtons");
+    const waterScenarioButtons = document.getElementById("waterScenarioButtons");
+    const waterOutput = document.getElementById("waterOutput");
+
+    function renderWaterOutput() {
+      const details = scenarioData[huidigScenario];
+      const title = document.createElement("strong");
+      title.textContent = `${huidigGebied} — ${huidigScenario}`;
+      const risico = document.createElement("div");
+      risico.textContent = `Risico: ${details.risico}.`;
+      const aanpak = document.createElement("div");
+      aanpak.textContent = `Aanpak: ${details.advies}.`;
+      waterOutput.replaceChildren(title, risico, aanpak);
+      registerInteraction();
+    }
+
+    gebiedtypes.forEach((gebied) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = gebied;
+      button.setAttribute("aria-pressed", String(gebied === huidigGebied));
+      button.addEventListener("click", () => {
+        huidigGebied = gebied;
+        [...gebiedTypeButtons.children].forEach((child) => child.setAttribute("aria-pressed", "false"));
+        button.setAttribute("aria-pressed", "true");
+        renderWaterOutput();
+      });
+      gebiedTypeButtons.appendChild(button);
+    });
+
+    Object.keys(scenarioData).forEach((scenario) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = scenario;
+      button.setAttribute("aria-pressed", String(scenario === huidigScenario));
+      button.addEventListener("click", () => {
+        huidigScenario = scenario;
+        [...waterScenarioButtons.children].forEach((child) => child.setAttribute("aria-pressed", "false"));
+        button.setAttribute("aria-pressed", "true");
+        renderWaterOutput();
+      });
+      waterScenarioButtons.appendChild(button);
+    });
+    renderWaterOutput();
+
+    const feedActivities = [
+      { label: "Scrollen op social feed", attention: 4, data: 4, energy: 3, dependency: 4 },
+      { label: "Route-apps", attention: 1, data: 3, energy: 2, dependency: 3 },
+      { label: "Bezorging", attention: 2, data: 3, energy: 4, dependency: 3 },
+      { label: "Cloud-opslag", attention: 1, data: 4, energy: 4, dependency: 4 },
+      { label: "Chat en groepsapps", attention: 2, data: 3, energy: 2, dependency: 3 },
+      { label: "Advertenties", attention: 4, data: 4, energy: 2, dependency: 4 },
+      { label: "Gemeentelijke informatie", attention: 1, data: 2, energy: 1, dependency: 2 },
+      { label: "Woning- en participatieplatforms", attention: 2, data: 3, energy: 2, dependency: 3 }
+    ];
+
+    const feedItems = document.getElementById("feedItems");
+    const feedSummary = document.getElementById("feedSummary");
+    const feedAxes = document.getElementById("feedAxes");
+
+    function updateFeedSummary() {
+      const totals = { attention: 0, data: 0, energy: 0, dependency: 0 };
+      let selected = 0;
+      feedItems.querySelectorAll("input").forEach((input, index) => {
+        if (input.checked) {
+          selected += 1;
+          const item = feedActivities[index];
+          totals.attention += item.attention;
+          totals.data += item.data;
+          totals.energy += item.energy;
+          totals.dependency += item.dependency;
+        }
+      });
+
+      feedAxes.innerHTML = "";
+      Object.entries(totals).forEach(([axis, value]) => {
+        const badge = document.createElement("span");
+        badge.className = "pill";
+        badge.textContent = `${axis}: ${value}`;
+        feedAxes.appendChild(badge);
+      });
+
+      let oordeel = "Laag extractieniveau: je digitale dag kan nog autonoom ingericht worden.";
+      const som = totals.attention + totals.data + totals.energy + totals.dependency;
+      if (som > 32) oordeel = "Hoge extractie: veel aandacht, data en infrastructuurcontrole liggen buiten publieke waarden.";
+      else if (som > 20) oordeel = "Middelhoge extractie: dagelijkse digitale afhankelijkheid beïnvloedt lokale democratische ruimte.";
+
+      feedSummary.textContent = `${selected} activiteiten geselecteerd. ${oordeel}`;
+      registerInteraction();
+    }
+
+    feedActivities.forEach((activity) => {
+      const label = document.createElement("label");
+      label.className = "feed-item small";
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.addEventListener("change", updateFeedSummary);
+      label.appendChild(input);
+      label.append(activity.label);
+      feedItems.appendChild(label);
+    });
+    updateFeedSummary();
+
+    const rounds = [
+      { question: "Er komt een nieuw woongebied. Welke lijn kies je?", options: [
+        { label: "Maximale parkeerruimte en snelle oplevering", score: { mens: 7, dier: 2, natuur: 2, vrijheid: 4 } },
+        { label: "Autoluw met hubs, bomen en waterbuffering", score: { mens: 8, dier: 8, natuur: 9, vrijheid: 7 } }
+      ]},
+      { question: "Gemeentelijke digitale tools inkopen. Wat is leidend?", options: [
+        { label: "Goedkoop en snel via dominante platformen", score: { mens: 6, dier: 3, natuur: 3, vrijheid: 2 } },
+        { label: "Privacyvriendelijk met publieke controle", score: { mens: 7, dier: 6, natuur: 6, vrijheid: 9 } }
+      ]},
+      { question: "Bedrijventerrein breidt uit. Welke randvoorwaarde zet je eerst?", options: [
+        { label: "Economische snelheid", score: { mens: 6, dier: 2, natuur: 2, vrijheid: 5 } },
+        { label: "Lucht, geluid, bodem en water op orde", score: { mens: 8, dier: 8, natuur: 9, vrijheid: 8 } }
+      ]},
+      { question: "Bereikbaarheid staat onder druk. Waar investeer je eerst in?", options: [
+        { label: "Asfalt en extra doorstroming", score: { mens: 6, dier: 2, natuur: 2, vrijheid: 4 } },
+        { label: "Fiets/OV-prioriteit en veilige leefstraten", score: { mens: 8, dier: 7, natuur: 7, vrijheid: 7 } }
+      ]}
+    ];
+    const brandingRevealThreshold = rounds.length * 2;
+
+    const totals = { mens: 0, dier: 0, natuur: 0, vrijheid: 0 };
+    let roundIndex = 0;
+
+    const roundText = document.getElementById("roundText");
+    const roundQuestion = document.getElementById("roundQuestion");
+    const roundChoices = document.getElementById("roundChoices");
+    const scoreLine = document.getElementById("scoreLine");
+    const scoreDetails = document.getElementById("scoreDetails");
+    const manifestOutput = document.getElementById("manifestOutput");
+    const actionFeedback = document.getElementById("actionFeedback");
+
+    function maxScoreForAxis(axis, completedRounds) {
+      return rounds
+        .slice(0, completedRounds)
+        .reduce((sum, round) => sum + Math.max(...round.options.map((option) => option.score[axis])), 0);
+    }
+
+    function updateBars() {
+      const completedRounds = Math.max(1, roundIndex);
+      const maxMens = maxScoreForAxis("mens", completedRounds);
+      const maxDier = maxScoreForAxis("dier", completedRounds);
+      const maxNatuur = maxScoreForAxis("natuur", completedRounds);
+      const maxVrijheid = maxScoreForAxis("vrijheid", completedRounds);
+      document.getElementById("barMens").style.width = `${Math.min(100, (totals.mens / maxMens) * 100)}%`;
+      document.getElementById("barDier").style.width = `${Math.min(100, (totals.dier / maxDier) * 100)}%`;
+      document.getElementById("barNatuur").style.width = `${Math.min(100, (totals.natuur / maxNatuur) * 100)}%`;
+      document.getElementById("barVrijheid").style.width = `${Math.min(100, (totals.vrijheid / maxVrijheid) * 100)}%`;
+    }
+
+    function registerInteraction() {
+      interactionCount += 1;
+      if (interactionCount >= brandingRevealThreshold) document.getElementById("brandingReveal").hidden = false;
+    }
+
+    function finalizeToekomstkiezer() {
+      const avg = {
+        mens: totals.mens / rounds.length,
+        dier: totals.dier / rounds.length,
+        natuur: totals.natuur / rounds.length,
+        vrijheid: totals.vrijheid / rounds.length
+      };
+
+      let headline = "Jouw Alphen-score: leefbaar, maar nog te afhankelijk.";
+      if (avg.vrijheid >= 7 && avg.natuur >= 7) headline = "Jouw Alphen-score: leefbaar én minder afhankelijk.";
+      else if (avg.mens >= 7 && avg.natuur < 5) headline = "Jouw keuzes beschermen woningen, maar offeren stilte en natuur op.";
+      else if (avg.vrijheid < 5) headline = "Jouw Alphen-score: praktisch, maar kwetsbaar voor platformmacht.";
+
+      scoreLine.textContent = headline;
+      const summary = document.createElement("span");
+      summary.textContent = `Meters gemiddeld: Mens ${avg.mens.toFixed(1)}, Dier ${avg.dier.toFixed(1)}, Natuur/Water ${avg.natuur.toFixed(1)}, Vrijheid/Waarden ${avg.vrijheid.toFixed(1)}.`;
+      const actionsTitle = document.createElement("strong");
+      actionsTitle.textContent = "Drie ultralokale acties:";
+      const list = document.createElement("ol");
+      [
+        "Kies één straat of wijk en meld waar groen/water direct versterkt kan worden.",
+        "Vraag bij elk nieuw project om een toets op dierenroutes, schaduw en publieke ruimte.",
+        "Eis bij digitale inkoop transparantie, dataminimalisatie en publieke controle."
+      ].forEach((line) => {
+        const item = document.createElement("li");
+        item.textContent = line;
+        list.appendChild(item);
+      });
+      scoreDetails.replaceChildren(summary, document.createElement("br"), actionsTitle, list);
+      roundText.textContent = "Toekomstkiezer afgerond";
+      roundQuestion.textContent = "Dank! Je hebt gezien dat politiek gaat over het managen van onderlinge schade.";
+      roundChoices.innerHTML = "";
+      registerInteraction();
+    }
+
+    function chooseOption(option) {
+      totals.mens += option.score.mens;
+      totals.dier += option.score.dier;
+      totals.natuur += option.score.natuur;
+      totals.vrijheid += option.score.vrijheid;
+      roundIndex += 1;
+      updateBars();
+      registerInteraction();
+      if (roundIndex >= rounds.length) finalizeToekomstkiezer();
+      else renderRound();
+    }
+
+    function renderRound() {
+      const round = rounds[roundIndex];
+      roundText.textContent = `Ronde ${roundIndex + 1} van ${rounds.length}`;
+      roundQuestion.textContent = round.question;
+      roundChoices.innerHTML = "";
+      round.options.forEach((option) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = option.label;
+        button.addEventListener("click", () => chooseOption(option));
+        roundChoices.appendChild(button);
+      });
+      updateBars();
+    }
+
+    renderRound();
+
+    document.querySelectorAll("[data-jump]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const target = document.querySelector(button.getAttribute("data-jump"));
+        if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+
+    document.getElementById("shareResult").addEventListener("click", () => {
+      const strong = document.createElement("strong");
+      strong.textContent = "Deeltekst:";
+      actionFeedback.replaceChildren(strong, document.createTextNode(` ${scoreLine.textContent} #AlphenLeeftNog`));
+      registerInteraction();
+    });
+    document.getElementById("localAction").addEventListener("click", () => {
+      const strong = document.createElement("strong");
+      strong.textContent = "Actie gestart:";
+      actionFeedback.replaceChildren(strong, document.createTextNode(" kies een plek met hittestress of verkeersdruk en meld dit als leefbaarheidsissue."));
+      registerInteraction();
+    });
+    document.getElementById("savePatch").addEventListener("click", () => {
+      const strong = document.createElement("strong");
+      strong.textContent = "Red jouw stukje Alphen:";
+      actionFeedback.replaceChildren(strong, document.createTextNode(" bundel één buurtvraag, één natuurdoel en één vrijheidsdoel in je wijkactie."));
+      registerInteraction();
+    });
+    document.getElementById("generateManifest").addEventListener("click", () => {
+      const heading = document.createElement("h3");
+      heading.textContent = "Mini-manifest";
+      const list = document.createElement("ol");
+      list.className = "small";
+      [
+        "Wij kiezen voor woningbouw zonder ecologische zelfverminking.",
+        "Wij kiezen voor leefbaarheid als norm: lucht, geluid, veiligheid en ruimte voor natuur.",
+        "Wij kiezen voor digitale autonomie: publieke waarden boven platformmacht."
+      ].forEach((line) => {
+        const item = document.createElement("li");
+        item.textContent = line;
+        list.appendChild(item);
+      });
+      manifestOutput.replaceChildren(heading, list);
+      registerInteraction();
+    });
+  </script>
+</body>
+</html>
